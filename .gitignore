@@ -178,3 +178,10 @@ join_files.sh
 
 cars.json
 crawls/
+pictures/
+yolov8*
+error_log*
+invalid_pictures/
+valid_pictures/
+
+data/
