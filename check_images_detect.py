@@ -8,7 +8,7 @@ import torch
 import traceback
 
 # Load YOLOv8 model
-model = YOLO('yolov8s.pt')
+model = YOLO('yolov8m.pt')
 
 def validate_image(image_path, valid_dir, invalid_dir):
     try:
@@ -20,13 +20,18 @@ def validate_image(image_path, valid_dir, invalid_dir):
         # Run inference
         results = model(img)
         
-        # Check if 'car' is detected with confidence > 0.3
+        # Check if 'car' is detected with confidence > 0.25
         car_detected = any(result.boxes.cls[result.boxes.cls == 2].numel() > 0 and 
-                           result.boxes.conf[result.boxes.cls == 2].max() > 0.3 
+                           result.boxes.conf[result.boxes.cls == 2].max() > 0.25 
                            for result in results)
         
+        # Create the same subfolder structure in valid or invalid directory
+        rel_path = os.path.relpath(image_path, 'data/pictures')
+        new_dir = os.path.join(valid_dir if car_detected else invalid_dir, os.path.dirname(rel_path))
+        os.makedirs(new_dir, exist_ok=True)
+        
         # Move the image to the appropriate directory
-        new_path = os.path.join(valid_dir if car_detected else invalid_dir, os.path.basename(image_path))
+        new_path = os.path.join(new_dir, os.path.basename(image_path))
         shutil.move(image_path, new_path)
         
         return car_detected, new_path
@@ -50,7 +55,7 @@ def process_images(root_dir='data/pictures', valid_dir='data/valid_pictures', in
     valid_count = 0
     invalid_count = 0
     
-    with ThreadPoolExecutor(max_workers=20) as executor:  # Increased back to 20 for better performance
+    with ThreadPoolExecutor(max_workers=20) as executor:
         futures = [executor.submit(validate_image, path, valid_dir, invalid_dir) for path in image_paths]
         
         for future in tqdm(as_completed(futures), total=len(futures), desc="Validating images"):
@@ -62,7 +67,18 @@ def process_images(root_dir='data/pictures', valid_dir='data/valid_pictures', in
                 invalid_count += 1
                 print(f"Moved invalid image to: {new_path}")
     
+    # Clean up empty directories
+    cleanup_empty_dirs(root_dir)
+    
     return valid_count, invalid_count
+
+def cleanup_empty_dirs(path):
+    for root, dirs, files in os.walk(path, topdown=False):
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            if not os.listdir(dir_path):  # check if directory is empty
+                os.rmdir(dir_path)
+                print(f"Removed empty directory: {dir_path}")
 
 if __name__ == "__main__":
     # Set the device

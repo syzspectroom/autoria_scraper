@@ -3,6 +3,8 @@ import scrapy
 class CarItem(scrapy.Item):
     ID = scrapy.Field()
     URL = scrapy.Field()
+    Brand = scrapy.Field()
+    Model = scrapy.Field()
     Title = scrapy.Field()
     Price = scrapy.Field()
     Location = scrapy.Field()
@@ -12,5 +14,8 @@ class CarItem(scrapy.Item):
     Trim = scrapy.Field()
     FuelType = scrapy.Field()
     EngineVolume = scrapy.Field()
+    BatteryCapacity = scrapy.Field()
+    Range = scrapy.Field()
     Gearbox = scrapy.Field()
-    ImageURL = scrapy.Field()   
+    ImageURL = scrapy.Field()
+    Year = scrapy.Field()

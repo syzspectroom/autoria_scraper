@@ -44,8 +44,13 @@ def validate_image(image_path, valid_dir, invalid_dir):
         # Check if the predicted class is in our list of car classes
         car_detected = top_pred in car_classes and confidence > 0.19
         
+        # Create the same subfolder structure in valid or invalid directory
+        rel_path = os.path.relpath(image_path, 'data/pictures')
+        new_dir = os.path.join(valid_dir if car_detected else invalid_dir, os.path.dirname(rel_path))
+        os.makedirs(new_dir, exist_ok=True)
+        
         # Move the image to the appropriate directory
-        new_path = os.path.join(valid_dir if car_detected else invalid_dir, os.path.basename(image_path))
+        new_path = os.path.join(new_dir, os.path.basename(image_path))
         shutil.move(image_path, new_path)
         
         print(f"Image: {image_path}, Class: {class_name}, Confidence: {confidence:.2f}, Car detected: {car_detected}")
@@ -71,7 +76,7 @@ def process_images(root_dir='data/pictures', valid_dir='data/valid_pictures', in
     valid_count = 0
     invalid_count = 0
     
-    with ThreadPoolExecutor(max_workers=20) as executor:
+    with ThreadPoolExecutor(max_workers=40) as executor:
         futures = [executor.submit(validate_image, path, valid_dir, invalid_dir) for path in image_paths]
         
         for future in tqdm(as_completed(futures), total=len(futures), desc="Validating images"):
@@ -81,7 +86,18 @@ def process_images(root_dir='data/pictures', valid_dir='data/valid_pictures', in
             else:
                 invalid_count += 1
     
+    # Clean up empty directories
+    cleanup_empty_dirs(root_dir)
+    
     return valid_count, invalid_count
+
+def cleanup_empty_dirs(path):
+    for root, dirs, files in os.walk(path, topdown=False):
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            if not os.listdir(dir_path):  # check if directory is empty
+                os.rmdir(dir_path)
+                print(f"Removed empty directory: {dir_path}")
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

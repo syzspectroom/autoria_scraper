@@ -3,21 +3,23 @@ import shutil
 from tqdm import tqdm
 import re
 
-def get_original_path(file_path, root_dir='pictures'):
+def get_original_path(file_path, root_dir='data/pictures'):
     """
     Reconstruct the original path based on the file name.
-    Assumes the file name starts with a numeric ID that corresponds to its original subdirectory.
+    Assumes the file name is an 8-digit ID that corresponds to its original subdirectory structure.
     """
     file_name = os.path.basename(file_path)
-    # Extract only the numeric ID from the filename
-    match = re.match(r'(\d+)', file_name)
+    # Extract the 8-digit ID from the filename
+    match = re.match(r'(\d{8})', file_name)
     if match:
         id_part = match.group(1)
-        return os.path.join(root_dir, id_part, file_name)
+        # Create the subfolder structure: first 2 digits / next 2 digits / next 2 digits
+        subfolder_path = os.path.join(id_part[:2], id_part[2:4], id_part[4:6])
+        return os.path.join(root_dir, subfolder_path, file_name)
     else:
-        raise ValueError(f"Unable to extract ID from filename: {file_name}")
+        raise ValueError(f"Unable to extract 8-digit ID from filename: {file_name}")
 
-def move_file_back(file_path, root_dir='pictures'):
+def move_file_back(file_path, root_dir='data/pictures'):
     """
     Move a file back to its original location in the root_dir.
     """
@@ -37,7 +39,7 @@ def clean_empty_dirs(directory):
                 os.rmdir(dir_path)
                 print(f"Removed empty directory: {dir_path}")
 
-def reset_detection_state(valid_dir='valid_pictures', invalid_dir='invalid_pictures', root_dir='pictures'):
+def reset_detection_state(valid_dir='data/valid_pictures', invalid_dir='data/invalid_pictures', root_dir='data/pictures'):
     """
     Move images from valid_dir and invalid_dir back to their original locations in root_dir.
     """
