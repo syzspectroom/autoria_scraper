@@ -1,5 +1,6 @@
 import scrapy
 
+
 class CarItem(scrapy.Item):
     ID = scrapy.Field()
     URL = scrapy.Field()

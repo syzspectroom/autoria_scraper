@@ -8,7 +8,7 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 ITEM_PIPELINES = {
-   "car_scraper.pipelines.CarScraperPipeline": 300,
+    "car_scraper.pipelines.CarScraperPipeline": 300,
 }
 
 DOWNLOAD_DELAY = 1
